@@ -1,663 +1,939 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Book of Answers</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
   :root {
-    --bg: #050608;
-    --surface: #0d0e14;
-    --surface2: #13141d;
-    --border: #2a2440;
     --gold: #c9a84c;
-    --gold2: #e8c97a;
-    --gold-dim: rgba(201,168,76,0.15);
-    --teal: #4ecdc4;
-    --text: #e8dfc8;
-    --text-dim: #7a7060;
-    --error: #e07070;
-    --radius: 12px;
+    --gold-light: #e8c97a;
+    --gold-dim: #6b5520;
+    --deep: #080610;
+    --surface: #0f0b1e;
+    --surface2: #160f2a;
+    --ink: #e8e0f0;
+    --ink-dim: #8a7fa0;
+    --crimson: #8b1a2a;
+    --glow: rgba(201,168,76,0.15);
   }
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
 
   body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Cormorant Garamond', serif;
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    background: var(--deep);
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', serif;
     overflow-x: hidden;
     position: relative;
   }
 
-  /* ── Starfield ── */
-  .stars {
+  /* STARFIELD */
+  #stars {
     position: fixed; inset: 0; pointer-events: none; z-index: 0;
     background:
-      radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,.5) 0%, transparent 100%),
-      radial-gradient(1px 1px at 35% 60%, rgba(255,255,255,.4) 0%, transparent 100%),
-      radial-gradient(1px 1px at 55% 10%, rgba(255,255,255,.6) 0%, transparent 100%),
-      radial-gradient(1px 1px at 75% 45%, rgba(255,255,255,.3) 0%, transparent 100%),
-      radial-gradient(1px 1px at 90% 75%, rgba(255,255,255,.5) 0%, transparent 100%),
-      radial-gradient(1px 1px at 20% 85%, rgba(255,255,255,.4) 0%, transparent 100%),
-      radial-gradient(1px 1px at 65% 90%, rgba(255,255,255,.3) 0%, transparent 100%),
-      radial-gradient(1.5px 1.5px at 45% 30%, rgba(201,168,76,.4) 0%, transparent 100%),
-      radial-gradient(1.5px 1.5px at 80% 15%, rgba(201,168,76,.3) 0%, transparent 100%);
+      radial-gradient(ellipse at 20% 50%, rgba(50,20,80,0.4) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(20,10,60,0.5) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, rgba(40,5,20,0.3) 0%, transparent 50%);
+  }
+  .star {
+    position: absolute; border-radius: 50%; background: white;
+    animation: twinkle var(--dur, 3s) ease-in-out infinite var(--del, 0s);
+  }
+  @keyframes twinkle {
+    0%,100% { opacity: var(--min, 0.1); transform: scale(1); }
+    50% { opacity: var(--max, 0.8); transform: scale(1.3); }
   }
 
-  .nebula {
-    position: fixed; inset: 0; pointer-events: none; z-index: 0;
-    background:
-      radial-gradient(ellipse 60% 40% at 20% 50%, rgba(60,20,100,.25) 0%, transparent 70%),
-      radial-gradient(ellipse 50% 35% at 80% 30%, rgba(20,60,80,.2) 0%, transparent 70%),
-      radial-gradient(ellipse 40% 60% at 50% 80%, rgba(80,20,60,.15) 0%, transparent 70%);
+  /* SMOKE / MIST */
+  .mist {
+    position: fixed; pointer-events: none; z-index: 0;
+    border-radius: 50%; filter: blur(80px);
+    animation: drift var(--d,20s) ease-in-out infinite alternate;
   }
+  .mist-1 { width: 600px; height: 300px; background: rgba(80,20,120,0.07); top: 10%; left: -10%; --d: 25s; }
+  .mist-2 { width: 500px; height: 250px; background: rgba(180,100,20,0.05); bottom: 20%; right: -5%; --d: 30s; }
+  .mist-3 { width: 400px; height: 200px; background: rgba(30,10,80,0.08); top: 50%; left: 30%; --d: 20s; }
+  @keyframes drift { from { transform: translateX(-40px) translateY(-20px); } to { transform: translateX(40px) translateY(20px); } }
 
-  .container {
+  /* LAYOUT */
+  .app {
     position: relative; z-index: 1;
-    width: 100%; max-width: 680px;
-    padding: 40px 20px 80px;
+    max-width: 700px; margin: 0 auto;
+    padding: 60px 24px 100px;
     display: flex; flex-direction: column; align-items: center; gap: 40px;
   }
 
+  /* HEADER */
   .header { text-align: center; }
-  .header .eyebrow {
-    font-size: .75rem; letter-spacing: .35em; text-transform: uppercase;
-    color: var(--gold); opacity: .7; margin-bottom: 12px;
+  .ornament { color: var(--gold); font-size: 1.4rem; letter-spacing: 8px; opacity: 0.7; }
+  h1 {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    color: var(--gold-light);
+    text-shadow: 0 0 40px rgba(201,168,76,0.4), 0 0 80px rgba(201,168,76,0.2);
+    line-height: 1.2; margin: 12px 0;
+    animation: headerGlow 4s ease-in-out infinite alternate;
   }
-  .header h1 {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: clamp(1.6rem, 5vw, 2.8rem);
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--gold2) 0%, var(--gold) 50%, #a07830 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1.2; margin-bottom: 16px;
+  @keyframes headerGlow {
+    from { text-shadow: 0 0 40px rgba(201,168,76,0.4), 0 0 80px rgba(201,168,76,0.2); }
+    to   { text-shadow: 0 0 60px rgba(201,168,76,0.7), 0 0 120px rgba(201,168,76,0.35); }
   }
-  .header p {
-    font-size: 1.05rem; font-style: italic;
-    color: var(--text-dim); line-height: 1.6;
-  }
-
-  .orb-wrap {
-    position: relative; width: 180px; height: 180px;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .orb-ring {
-    position: absolute; inset: 0; border-radius: 50%;
-    border: 1px solid rgba(201,168,76,.25);
-    animation: spin 18s linear infinite;
-  }
-  .orb-ring:nth-child(2) {
-    inset: 12px;
-    border: 1px dashed rgba(201,168,76,.15);
-    animation-duration: 28s; animation-direction: reverse;
-  }
-  .orb {
-    width: 120px; height: 120px; border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%,
-      rgba(201,168,76,.35) 0%,
-      rgba(60,20,100,.6) 40%,
-      rgba(10,5,20,.9) 100%);
-    box-shadow:
-      0 0 30px rgba(201,168,76,.2),
-      0 0 80px rgba(60,20,100,.4),
-      inset 0 0 30px rgba(201,168,76,.1);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 2.5rem;
-    transition: box-shadow .4s;
-  }
-  .orb-wrap:hover .orb {
-    box-shadow:
-      0 0 50px rgba(201,168,76,.4),
-      0 0 100px rgba(60,20,100,.6),
-      inset 0 0 30px rgba(201,168,76,.2);
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .question-form {
-    width: 100%; display: flex; flex-direction: column; gap: 14px;
-  }
-  .input-wrap { position: relative; }
-  .question-input {
-    width: 100%; padding: 16px 20px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); color: var(--text);
-    font-family: 'Cormorant Garamond', serif; font-size: 1.05rem;
-    outline: none; transition: border-color .3s, box-shadow .3s;
-    resize: none;
-  }
-  .question-input::placeholder { color: var(--text-dim); font-style: italic; }
-  .question-input:focus {
-    border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(201,168,76,.1), 0 0 20px rgba(201,168,76,.08);
-  }
-  .char-count {
-    position: absolute; right: 14px; bottom: 12px;
-    font-size: .75rem; color: var(--text-dim); pointer-events: none;
+  .subtitle {
+    font-style: italic; color: var(--ink-dim);
+    font-size: 1.1rem; letter-spacing: 1px;
   }
 
-  .ask-btn {
-    padding: 15px 30px;
-    background: linear-gradient(135deg, #2a1f0a 0%, #1a140a 100%);
-    border: 1px solid var(--gold);
-    border-radius: var(--radius); color: var(--gold2);
-    font-family: 'Cinzel Decorative', serif; font-size: .85rem;
-    letter-spacing: .12em; cursor: pointer;
-    transition: all .3s;
-    box-shadow: 0 0 20px rgba(201,168,76,.08);
-    position: relative; overflow: hidden;
+  /* DIVIDER */
+  .divider {
+    width: 100%; display: flex; align-items: center; gap: 16px;
+    color: var(--gold-dim);
   }
-  .ask-btn::after {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(201,168,76,.15), transparent);
-    opacity: 0; transition: opacity .3s;
-  }
-  .ask-btn:hover { box-shadow: 0 0 30px rgba(201,168,76,.25); }
-  .ask-btn:hover::after { opacity: 1; }
-  .ask-btn:active { transform: scale(.98); }
-  .ask-btn:disabled { opacity: .4; cursor: not-allowed; }
-
-  .error-msg {
-    color: var(--error); font-size: .9rem; font-style: italic;
-    text-align: center; min-height: 1.2em;
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
   }
 
-  .answer-card {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 36px 32px;
-    text-align: center;
-    opacity: 0; transform: translateY(20px) scale(.97);
-    transition: opacity .5s ease, transform .5s ease;
-    position: relative; overflow: hidden;
-  }
-  .answer-card::before {
-    content: ''; position: absolute; inset: 0;
-    background: radial-gradient(ellipse 60% 40% at 50% 0%,
-      rgba(201,168,76,.06) 0%, transparent 70%);
-    pointer-events: none;
-  }
-  .answer-card.visible { opacity: 1; transform: translateY(0) scale(1); }
-  .answer-label {
-    font-size: .7rem; letter-spacing: .3em; text-transform: uppercase;
-    color: var(--gold); opacity: .6; margin-bottom: 16px;
-  }
-  .answer-text {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: clamp(1rem, 3.5vw, 1.5rem);
-    line-height: 1.5;
-    background: linear-gradient(135deg, var(--gold2), var(--gold));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .answer-divider {
-    width: 60px; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    margin: 16px auto;
-  }
-  .answer-question {
-    font-size: .9rem; color: var(--text-dim); font-style: italic;
-  }
-
-  .consulting {
-    width: 100%; padding: 30px; text-align: center;
-    display: none;
-  }
-  .consulting.active { display: block; }
-  .consulting-dots span {
-    display: inline-block; width: 8px; height: 8px;
-    background: var(--gold); border-radius: 50%;
-    margin: 0 4px; opacity: .3;
-    animation: pulse 1.2s ease-in-out infinite;
-  }
-  .consulting-dots span:nth-child(2) { animation-delay: .2s; }
-  .consulting-dots span:nth-child(3) { animation-delay: .4s; }
-  @keyframes pulse { 0%,100%{opacity:.3;transform:scale(1)} 50%{opacity:1;transform:scale(1.3)} }
-  .consulting p { margin-top: 14px; font-style: italic; color: var(--text-dim); font-size:.95rem; }
-
-  footer {
-    position: relative; z-index: 1;
-    padding: 20px; text-align: center;
-    font-size: .8rem; color: var(--text-dim);
-  }
-  .made-with {
-    cursor: pointer; user-select: none;
-    transition: color .3s;
-    display: inline-block;
-    padding: 4px 8px;
-  }
-  .made-with:hover { color: var(--gold); }
-
-  .overlay {
-    position: fixed; inset: 0; z-index: 100;
-    background: rgba(0,0,0,.75); backdrop-filter: blur(6px);
-    display: flex; align-items: center; justify-content: center;
-    opacity: 0; pointer-events: none; transition: opacity .3s;
-  }
-  .overlay.open { opacity: 1; pointer-events: all; }
-
-  .modal {
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 16px; padding: 36px 32px;
-    width: min(420px, 90vw);
-    transform: translateY(20px) scale(.97);
-    transition: transform .3s;
+  /* BOOK */
+  .book {
+    width: 100%; background: var(--surface);
+    border: 1px solid var(--gold-dim);
+    border-radius: 4px;
+    box-shadow: 0 0 60px rgba(0,0,0,0.8), inset 0 0 40px rgba(0,0,0,0.5), 0 0 20px rgba(201,168,76,0.05);
+    overflow: hidden;
     position: relative;
   }
-  .overlay.open .modal { transform: translateY(0) scale(1); }
-  .modal h2 {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: 1.1rem; color: var(--gold2);
-    margin-bottom: 6px;
+  .book::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
   }
-  .modal p { color: var(--text-dim); font-size: .9rem; font-style: italic; margin-bottom: 24px; }
-  .modal-close {
-    position: absolute; top: 14px; right: 16px;
-    background: none; border: none; color: var(--text-dim);
-    font-size: 1.2rem; cursor: pointer; line-height: 1;
-    transition: color .2s;
-  }
-  .modal-close:hover { color: var(--text); }
+  .book-inner { padding: 40px 36px; }
 
-  .field { margin-bottom: 16px; }
-  .field label { display: block; font-size: .8rem; letter-spacing: .1em; color: var(--gold); opacity:.7; margin-bottom: 8px; }
-  .field input {
-    width: 100%; padding: 12px 16px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; color: var(--text);
-    font-family: 'Cormorant Garamond', serif; font-size: 1rem;
-    outline: none; transition: border-color .3s;
+  /* QUESTION FORM */
+  .question-label {
+    display: block;
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.75rem; letter-spacing: 4px;
+    color: var(--gold); text-transform: uppercase;
+    margin-bottom: 14px;
   }
-  .field input:focus { border-color: var(--gold); }
+  .question-wrap { position: relative; }
+  textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--gold-dim);
+    border-radius: 3px;
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.15rem;
+    padding: 16px 18px;
+    resize: none; height: 90px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    outline: none;
+  }
+  textarea::placeholder { color: var(--ink-dim); font-style: italic; }
+  textarea:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 20px rgba(201,168,76,0.12);
+  }
+  .char-count {
+    position: absolute; bottom: 10px; right: 14px;
+    font-size: 0.75rem; color: var(--ink-dim);
+  }
 
-  .login-btn {
-    width: 100%; padding: 13px;
-    background: linear-gradient(135deg, rgba(201,168,76,.2), rgba(201,168,76,.08));
-    border: 1px solid var(--gold); border-radius: 8px;
-    color: var(--gold2); font-family: 'Cinzel Decorative', serif;
-    font-size: .8rem; letter-spacing: .1em;
-    cursor: pointer; transition: all .3s;
+  /* ERROR */
+  .error-msg {
+    color: #e06060; font-style: italic;
+    font-size: 0.9rem; margin-top: 8px;
+    min-height: 20px;
+    transition: opacity 0.3s;
+  }
+
+  /* BUTTON */
+  .btn-ask {
+    margin-top: 22px; width: 100%;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold-light);
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.85rem; letter-spacing: 3px;
+    padding: 16px 24px;
+    cursor: pointer;
+    position: relative; overflow: hidden;
+    transition: color 0.3s, box-shadow 0.3s;
+    text-transform: uppercase;
+  }
+  .btn-ask::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, var(--gold-dim), transparent);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .btn-ask:hover { color: white; box-shadow: 0 0 30px rgba(201,168,76,0.25); }
+  .btn-ask:hover::before { opacity: 1; }
+  .btn-ask:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-ask span { position: relative; z-index: 1; }
+
+  /* CRYSTAL BALL / ANIMATION */
+  .oracle-section { width: 100%; text-align: center; display: none; }
+  .oracle-section.visible { display: block; }
+
+  .crystal-container {
+    position: relative; width: 160px; height: 160px;
+    margin: 0 auto 30px;
+  }
+  .crystal {
+    width: 160px; height: 160px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%,
+      rgba(180,140,255,0.3) 0%,
+      rgba(80,20,120,0.6) 40%,
+      rgba(10,5,30,0.9) 100%);
+    border: 2px solid rgba(201,168,76,0.3);
+    box-shadow:
+      0 0 40px rgba(120,60,200,0.3),
+      0 0 80px rgba(80,20,160,0.2),
+      inset 0 0 40px rgba(0,0,0,0.5);
+    position: relative; overflow: hidden;
+  }
+  .crystal-inner {
+    position: absolute; inset: 0; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .crystal-swirl {
+    position: absolute; inset: 0; border-radius: 50%; opacity: 0;
+    background: conic-gradient(from 0deg, transparent, rgba(180,120,255,0.2), transparent, rgba(100,50,200,0.15), transparent);
+    animation: swirlSpin 2s linear infinite;
+  }
+  @keyframes swirlSpin { to { transform: rotate(360deg); } }
+
+  .crystal-glyph {
+    font-size: 2.5rem; opacity: 0.6;
+    animation: glyphPulse 2s ease-in-out infinite;
+  }
+  @keyframes glyphPulse {
+    0%,100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.15); opacity: 0.9; }
+  }
+
+  /* THINKING STATE */
+  .thinking .crystal {
+    animation: crystalThink 0.3s ease-in-out infinite alternate;
+  }
+  @keyframes crystalThink {
+    from { box-shadow: 0 0 40px rgba(120,60,200,0.3), 0 0 80px rgba(80,20,160,0.2), inset 0 0 40px rgba(0,0,0,0.5); }
+    to   { box-shadow: 0 0 70px rgba(180,80,255,0.6), 0 0 120px rgba(120,40,220,0.5), inset 0 0 40px rgba(0,0,0,0.5); }
+  }
+  .thinking .crystal-swirl { opacity: 1; }
+
+  /* ANSWER REVEAL */
+  .answer-card {
+    background: var(--surface2);
+    border: 1px solid var(--gold-dim);
+    padding: 28px 32px;
     margin-top: 8px;
+    position: relative;
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
   }
-  .login-btn:hover { background: rgba(201,168,76,.25); }
+  .answer-card.revealed { opacity: 1; transform: translateY(0); }
+  .answer-card::before, .answer-card::after {
+    content: '✦';
+    position: absolute; color: var(--gold); font-size: 0.8rem;
+    opacity: 0.6;
+  }
+  .answer-card::before { top: 10px; left: 14px; }
+  .answer-card::after  { bottom: 10px; right: 14px; }
 
-  .login-error { color: var(--error); font-size: .85rem; text-align: center; margin-top: 10px; min-height: 1.2em; }
-
-  .admin-panel {
-    width: 100%; max-width: 760px;
-    padding: 40px 20px 80px;
-    position: relative; z-index: 1;
-    display: none;
-  }
-  .admin-panel.active { display: block; }
-
-  .admin-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 30px; gap: 16px; flex-wrap: wrap;
-  }
-  .admin-header h2 {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: 1.2rem; color: var(--gold2);
-  }
-  .logout-btn {
-    padding: 8px 18px;
-    background: none; border: 1px solid var(--border);
-    border-radius: 6px; color: var(--text-dim);
-    font-family: 'Cormorant Garamond', serif; font-size: .9rem;
-    cursor: pointer; transition: all .3s;
-  }
-  .logout-btn:hover { border-color: var(--error); color: var(--error); }
-
-  .questions-list { display: flex; flex-direction: column; gap: 12px; }
-
-  .q-item {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; padding: 16px 20px;
-    animation: fadeIn .4s ease;
-  }
-  @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: none; } }
-
-  .q-meta { font-size: .75rem; color: var(--text-dim); margin-bottom: 6px; letter-spacing: .05em; }
-  .q-text { font-size: 1rem; color: var(--text); font-style: italic; }
-  .q-answer { font-size: .85rem; color: var(--gold); margin-top: 6px; }
-
-  .loading-admin {
-    text-align: center; padding: 60px 20px;
-    color: var(--text-dim); font-style: italic;
-  }
-  .empty-state {
-    text-align: center; padding: 60px 20px;
-    color: var(--text-dim); font-style: italic;
-    border: 1px dashed var(--border); border-radius: 12px;
-  }
-  .empty-state .big { font-size: 2rem; display: block; margin-bottom: 10px; }
-
-  /* ── BANNER IS NOW HIDDEN BY DEFAULT ── */
-  .setup-banner {
-    display: none;
-    background: rgba(201,168,76,.08); border: 1px solid rgba(201,168,76,.3);
-    border-radius: 12px; padding: 20px 24px;
-    font-size: .88rem; line-height: 1.7;
-    color: var(--text); width: 100%;
-  }
-  .setup-banner strong { color: var(--gold2); }
-  .setup-banner code {
-    background: var(--surface2); border-radius: 4px;
-    padding: 2px 6px; font-family: monospace; font-size: .82rem;
-    color: var(--teal);
-  }
-  .setup-banner h3 {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: .9rem; color: var(--gold);
+  .answer-label {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.6rem; letter-spacing: 5px;
+    color: var(--gold-dim); text-transform: uppercase;
     margin-bottom: 10px;
   }
+  .answer-text {
+    font-size: clamp(1.3rem, 3vw, 1.8rem);
+    font-style: italic;
+    color: var(--gold-light);
+    line-height: 1.4;
+    text-shadow: 0 0 20px rgba(201,168,76,0.3);
+  }
 
-  @media (max-width: 480px) {
-    .answer-card { padding: 24px 20px; }
-    .modal { padding: 28px 22px; }
+  /* FOOTER CREDIT */
+  .footer-credit {
+    margin-top: 20px;
+    font-size: 0.8rem;
+    color: var(--ink-dim);
+    cursor: pointer;
+    transition: color 0.3s;
+    user-select: none;
+  }
+  .footer-credit:hover { color: var(--gold-dim); }
+
+  /* MODAL OVERLAY */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--gold-dim);
+    padding: 40px 36px;
+    width: min(440px, 90vw);
+    position: relative;
+    box-shadow: 0 0 80px rgba(0,0,0,0.9);
+    transform: translateY(20px) scale(0.97);
+    transition: transform 0.3s;
+  }
+  .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+  .modal::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .modal h2 {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 1.1rem; color: var(--gold-light);
+    margin-bottom: 6px;
+  }
+  .modal p { color: var(--ink-dim); font-size: 0.95rem; margin-bottom: 24px; }
+
+  .modal-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--gold-dim);
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.3s;
+    margin-bottom: 8px;
+  }
+  .modal-input:focus { border-color: var(--gold); }
+  .modal-error { color: #e06060; font-size: 0.85rem; min-height: 18px; margin-bottom: 14px; }
+
+  .modal-btns { display: flex; gap: 12px; }
+  .btn-modal {
+    flex: 1; padding: 12px;
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.7rem; letter-spacing: 2px;
+    border: 1px solid; cursor: pointer;
+    transition: all 0.2s; background: transparent;
+    text-transform: uppercase;
+  }
+  .btn-confirm { border-color: var(--gold); color: var(--gold-light); }
+  .btn-confirm:hover { background: var(--gold-dim); color: white; }
+  .btn-cancel  { border-color: #444; color: var(--ink-dim); }
+  .btn-cancel:hover  { border-color: #777; color: var(--ink); }
+
+  .modal-close {
+    position: absolute; top: 14px; right: 16px;
+    background: none; border: none;
+    color: var(--ink-dim); font-size: 1.3rem;
+    cursor: pointer; transition: color 0.2s;
+  }
+  .modal-close:hover { color: var(--gold); }
+
+  /* ADMIN PANEL */
+  .admin-panel {
+    width: 100%; position: relative; z-index: 1;
+    display: none;
+  }
+  .admin-panel.visible { display: block; }
+
+  .admin-header {
+    text-align: center; padding: 50px 24px 20px;
+    background: linear-gradient(to bottom, var(--deep), transparent);
+  }
+  .admin-header h2 {
+    font-family: 'Cinzel Decorative', cursive;
+    color: var(--gold-light); font-size: 1.5rem;
+    margin-bottom: 6px;
+  }
+  .admin-header p { color: var(--ink-dim); font-style: italic; }
+
+  .admin-inner {
+    max-width: 800px; margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  .admin-stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px; margin-bottom: 32px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--gold-dim);
+    padding: 20px; text-align: center;
+  }
+  .stat-num {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 2rem; color: var(--gold-light);
+    display: block;
+  }
+  .stat-label { font-size: 0.8rem; color: var(--ink-dim); letter-spacing: 2px; text-transform: uppercase; }
+
+  .admin-toolbar {
+    display: flex; gap: 12px; margin-bottom: 20px;
+    flex-wrap: wrap; align-items: center;
+  }
+  .admin-search {
+    flex: 1; min-width: 180px;
+    background: var(--surface2);
+    border: 1px solid var(--gold-dim);
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem; padding: 10px 14px; outline: none;
+  }
+  .admin-search:focus { border-color: var(--gold); }
+
+  .btn-small {
+    padding: 10px 16px;
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.65rem; letter-spacing: 2px;
+    border: 1px solid var(--gold-dim);
+    color: var(--gold); background: transparent;
+    cursor: pointer; transition: all 0.2s;
+    white-space: nowrap; text-transform: uppercase;
+  }
+  .btn-small:hover { background: var(--gold-dim); color: white; }
+  .btn-small.danger { border-color: #6b2020; color: #e06060; }
+  .btn-small.danger:hover { background: #6b2020; color: white; }
+
+  .questions-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+  .questions-table th {
+    font-family: 'Cinzel Decorative', cursive;
+    font-size: 0.6rem; letter-spacing: 3px;
+    color: var(--gold-dim); text-align: left;
+    padding: 10px 14px; border-bottom: 1px solid var(--gold-dim);
+    text-transform: uppercase;
+  }
+  .questions-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(201,168,76,0.08);
+    color: var(--ink);
+    vertical-align: top;
+  }
+  .questions-table tr:hover td { background: rgba(201,168,76,0.03); }
+  .q-text { max-width: 340px; }
+  .q-answer { color: var(--gold-dim); font-style: italic; font-size: 0.9rem; }
+  .q-time { color: var(--ink-dim); font-size: 0.8rem; white-space: nowrap; }
+  .q-num { color: var(--ink-dim); font-size: 0.8rem; }
+
+  .empty-state {
+    text-align: center; padding: 60px 20px;
+    color: var(--ink-dim); font-style: italic;
+  }
+  .empty-state .es-icon { font-size: 2.5rem; display: block; margin-bottom: 12px; opacity: 0.4; }
+
+  .loading-row td { text-align: center; padding: 40px; color: var(--ink-dim); font-style: italic; }
+
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--gold-dim); cursor: pointer;
+    font-size: 0.9rem; margin-bottom: 24px;
+    transition: color 0.2s; background: none; border: none;
+    font-family: 'Cormorant Garamond', serif;
+  }
+  .back-btn:hover { color: var(--gold); }
+
+  /* NOTIFICATION TOAST */
+  .toast {
+    position: fixed; bottom: 30px; right: 30px; z-index: 200;
+    background: var(--surface);
+    border: 1px solid var(--gold-dim);
+    padding: 14px 22px;
+    font-size: 0.9rem; color: var(--ink);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    transform: translateX(120%);
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    max-width: 280px;
+  }
+  .toast.show { transform: translateX(0); }
+
+  /* RESPONSIVE */
+  @media (max-width: 500px) {
+    .book-inner { padding: 28px 20px; }
+    .admin-inner { padding: 0 16px 60px; }
+    .questions-table { font-size: 0.8rem; }
+    .questions-table th, .questions-table td { padding: 8px 10px; }
+    .q-text { max-width: 180px; }
   }
 </style>
 </head>
 <body>
 
-<div class="stars"></div>
-<div class="nebula"></div>
+<!-- BACKGROUND -->
+<div id="stars"></div>
+<div class="mist mist-1"></div>
+<div class="mist mist-2"></div>
+<div class="mist mist-3"></div>
 
-<div class="container" id="mainApp">
+<!-- ═══ MAIN APP ═══ -->
+<div class="app" id="mainApp">
+
   <div class="header">
-    <p class="eyebrow">Ancient Wisdom · Modern Oracle</p>
-    <h1>The Book of Answers</h1>
-    <p>Ask a yes-or-no question with a sincere heart,<br>and the universe shall respond.</p>
+    <div class="ornament">⋆ ✦ ⋆</div>
+    <h1>The Book<br>of Answers</h1>
+    <p class="subtitle">Ask, and the cosmos shall reply</p>
   </div>
 
-  <div class="orb-wrap">
-    <div class="orb-ring"></div>
-    <div class="orb-ring"></div>
-    <div class="orb">🔮</div>
-  </div>
+  <div class="divider">✦</div>
 
-  <div class="setup-banner" id="setupBanner">
-    <h3>⚙️ Supabase Setup Guide</h3>
-    <strong>1. Create a free project</strong> at <code>supabase.com</code><br>
-    <strong>2. Create this SQL table</strong> in the SQL Editor:<br>
-    <code style="display:block;margin:8px 0;padding:10px;white-space:pre-wrap;">create table questions (
-  id bigint generated always as identity primary key,
-  question text not null,
-  answer text not null,
-  created_at timestamptz default now()
-);</code>
-    <strong>3. Enable Row Level Security</strong>, then add a policy:<br>
-    <code>Allow anonymous inserts: true</code>
-  </div>
-
-  <form class="question-form" id="questionForm">
-    <div class="input-wrap">
-      <textarea
-        class="question-input" id="questionInput"
-        rows="3" maxlength="200"
-        placeholder="Ask your yes-or-no question here…"
-      ></textarea>
-      <span class="char-count" id="charCount">0/200</span>
+  <div class="book">
+    <div class="book-inner">
+      <label class="question-label" for="questionInput">Your Question</label>
+      <div class="question-wrap">
+        <textarea
+          id="questionInput"
+          maxlength="280"
+          placeholder="What is your question for the cosmos…"
+        ></textarea>
+        <span class="char-count" id="charCount">0/280</span>
+      </div>
+      <div class="error-msg" id="errorMsg"></div>
+      <button class="btn-ask" id="askBtn" onclick="askOracle()">
+        <span>✦ Seek the Answer ✦</span>
+      </button>
     </div>
-    <div class="error-msg" id="errorMsg"></div>
-    <button type="submit" class="ask-btn" id="askBtn">✦ Consult the Oracle ✦</button>
-  </form>
+  </div>
 
-  <div class="consulting" id="consulting">
-    <div class="consulting-dots">
-      <span></span><span></span><span></span>
+  <div class="oracle-section" id="oracleSection">
+    <div class="crystal-container" id="crystalContainer">
+      <div class="crystal" id="crystal">
+        <div class="crystal-swirl"></div>
+        <div class="crystal-inner">
+          <span class="crystal-glyph">☽</span>
+        </div>
+      </div>
     </div>
-    <p>The oracle is consulting the ancient pages…</p>
+
+    <div class="answer-card" id="answerCard">
+      <div class="answer-label">The Oracle Speaks</div>
+      <div class="answer-text" id="answerText"></div>
+    </div>
   </div>
 
-  <div class="answer-card" id="answerCard">
-    <div class="answer-label">The Oracle Speaks</div>
-    <div class="answer-divider"></div>
-    <div class="answer-text" id="answerText"></div>
-    <div class="answer-divider"></div>
-    <div class="answer-question" id="answerQuestion"></div>
-  </div>
+  <p class="footer-credit" id="footerCredit" onclick="openLoginModal()">Made with care ❤️</p>
 </div>
 
+<!-- ═══ ADMIN PANEL ═══ -->
 <div class="admin-panel" id="adminPanel">
   <div class="admin-header">
-    <h2>⚜ Oracle Records</h2>
-    <button class="logout-btn" id="logoutBtn">Sign Out</button>
+    <div class="ornament">⋆ ✦ ⋆</div>
+    <h2>Oracle's Sanctum</h2>
+    <p>Questions asked of the cosmos</p>
   </div>
-  <div class="questions-list" id="questionsList">
-    <div class="loading-admin">Summoning records from the ether…</div>
+  <div class="admin-inner">
+    <button class="back-btn" onclick="showMain()">← Return to the Oracle</button>
+
+    <div class="admin-stats">
+      <div class="stat-card">
+        <span class="stat-num" id="statTotal">—</span>
+        <span class="stat-label">Total Questions</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" id="statToday">—</span>
+        <span class="stat-label">Asked Today</span>
+      </div>
+    </div>
+
+    <div class="admin-toolbar">
+      <input
+        class="admin-search"
+        type="text"
+        placeholder="Search questions…"
+        id="adminSearch"
+        oninput="filterQuestions()"
+      />
+      <button class="btn-small" onclick="loadQuestions()">↻ Refresh</button>
+      <button class="btn-small danger" onclick="clearAll()">⊗ Clear All</button>
+    </div>
+
+    <table class="questions-table" id="questionsTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Question</th>
+          <th>Answer</th>
+          <th>When</th>
+        </tr>
+      </thead>
+      <tbody id="questionsBody">
+        <tr class="loading-row"><td colspan="4">Consulting the stars…</td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
-<footer>
-  <span class="made-with" id="madeWith">Made with care</span>
-</footer>
-
-<div class="overlay" id="loginOverlay">
+<!-- ═══ LOGIN MODAL ═══ -->
+<div class="modal-overlay" id="loginModal">
   <div class="modal">
-    <button class="modal-close" id="modalClose">✕</button>
-    <h2>Oracle's Gate</h2>
-    <p>Speak the secret words to enter the inner sanctum.</p>
-    <div class="field">
-      <label>USERNAME</label>
-      <input type="text" id="adminUser" placeholder="Enter username" autocomplete="off"/>
+    <button class="modal-close" onclick="closeLoginModal()">✕</button>
+    <div class="ornament" style="margin-bottom:12px">✦</div>
+    <h2>Sanctum Access</h2>
+    <p>Enter the sacred password to view the scrolls.</p>
+    <input
+      class="modal-input"
+      type="password"
+      id="passwordInput"
+      placeholder="Password…"
+      onkeydown="if(event.key==='Enter') confirmLogin()"
+    />
+    <div class="modal-error" id="loginError"></div>
+    <div class="modal-btns">
+      <button class="btn-modal btn-confirm" onclick="confirmLogin()"><span>Enter</span></button>
+      <button class="btn-modal btn-cancel" onclick="closeLoginModal()"><span>Retreat</span></button>
     </div>
-    <div class="field">
-      <label>PASSWORD</label>
-      <input type="password" id="adminPass" placeholder="Enter password"/>
-    </div>
-    <button class="login-btn" id="loginBtn">Enter the Sanctum</button>
-    <div class="login-error" id="loginError"></div>
   </div>
 </div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════════
-//   CONFIGURATION — CREDENTIALS APPLIED
-// ══════════════════════════════════════════════
-const SUPABASE_URL      = 'https://ubcxjfnmtdaxwmggccwa.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViY3hqZm5tdGRheHdtZ2djY3dhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNTMwODMsImV4cCI6MjA5MTgyOTA4M30.GaXgRnTLBnIVbiswaeZD8xLGQlQ9qYc5xsuXVYdtn5Q';
+// ═══════════════════════════════════════════
+// SUPABASE CONFIG  ← replace with your keys
+// ═══════════════════════════════════════════
+const SUPABASE_URL = 'https://rwqrpwqvdfkzxfbuydou.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3cXJwd3F2ZGZrenhmYnV5ZG91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNDQ4MjgsImV4cCI6MjA5MTkyMDgyOH0.HtyssRUlVFQ0sP1pq89zCBgqMgHiLGUGCUuQAMrE83Q';
+const ADMIN_PASSWORD = 'killer2025';
 
-const ADMIN_USERNAME = 'oracle';
-const ADMIN_PASSWORD = 'mystic123';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ══════════════════════════════════════════════
-//   SUPABASE INIT
-// ══════════════════════════════════════════════
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+// ═══════════════════════════════════════════
+// ANSWERS (50+)
+// ═══════════════════════════════════════════
 const ANSWERS = [
-  "Yes, without a doubt", "It is certain", "It is decidedly so", "Most likely",
-  "Signs point to yes", "As I see it, yes", "Yes — the stars align",
-  "Outlook is very good", "The cosmos say yes", "Absolutely, proceed",
-  "Don't count on it", "My reply is no", "My sources say no", "Outlook not so good",
-  "Very doubtful", "The winds say no", "Paths remain closed", "Not in this cycle",
-  "The oracle resists", "Shadows cloud the way", "Reply hazy, try again",
-  "Ask again later", "Better not tell you now", "Cannot predict now",
-  "Concentrate and ask again", "The pages are unclear", "Seek another moment",
-  "The mist obscures truth", "The answer sleeps", "Not yet written",
-  "Your path is your own", "Trust your intuition here", "The heart already knows",
-  "Patience will reveal all", "This moment is not ready", "The universe is listening",
-  "Let the question breathe", "Fortune smiles upon you", "Boldly move forward",
-  "The spirits whisper yes", "Retreat and reconsider", "Fear not — yes",
-  "The ancient texts agree", "All signs converge: yes", "Wisdom says: wait",
-  "The oracle sees light ahead", "Tread carefully: uncertain", "A resounding yes echoes",
-  "The moon favors this", "Jupiter aligns — proceed", "Saturn cautions: not yet",
-  "The void reflects no", "Every star votes yes", "The tide turns in your favor",
-  "No — seek another road"
+  "It is certain",
+  "It is decidedly so",
+  "Without a doubt",
+  "Yes, definitely",
+  "You may rely on it",
+  "As I see it, yes",
+  "Most likely",
+  "Outlook good",
+  "Yes",
+  "Signs point to yes",
+  "Reply hazy, try again",
+  "Ask again later",
+  "Better not tell you now",
+  "Cannot predict now",
+  "Concentrate and ask again",
+  "Don't count on it",
+  "My reply is no",
+  "My sources say no",
+  "Outlook not so good",
+  "Very doubtful",
+  "The stars align in your favour",
+  "The cosmos whispers yes",
+  "Seek and you shall find",
+  "Trust the journey",
+  "The answer lies within you",
+  "Patience brings clarity",
+  "The winds of change blow favorably",
+  "Let destiny unfold",
+  "The path forward is clear",
+  "Surrender to the unknown",
+  "The universe conspires for you",
+  "Your heart already knows",
+  "A door will open soon",
+  "Not yet — but in time",
+  "Release your doubts",
+  "The moon says otherwise",
+  "Ancient wisdom says no",
+  "The runes are silent on this",
+  "Beware of false certainty",
+  "Look inward for the answer",
+  "The pendulum swings toward yes",
+  "Fortune favors the bold — act",
+  "The tide turns in your direction",
+  "Shadows obscure the truth now",
+  "The oracle sees possibility",
+  "What you seek seeks you",
+  "All signs point elsewhere",
+  "This question has many answers",
+  "The cosmos needs more time",
+  "Alignment is not yet complete",
+  "The stars have spoken — yes",
+  "The void says nothing yet",
+  "Ask with a pure heart and you shall know",
+  "The answer changes as you do",
+  "What you fear and what you want are the same",
+  "The universe laughs — of course",
+  "This too shall pass — say the stars",
+  "A resounding yes from the ether",
 ];
 
-const questionForm   = document.getElementById('questionForm');
-const questionInput  = document.getElementById('questionInput');
-const charCount      = document.getElementById('charCount');
-const errorMsg       = document.getElementById('errorMsg');
-const askBtn         = document.getElementById('askBtn');
-const consulting     = document.getElementById('consulting');
-const answerCard     = document.getElementById('answerCard');
-const answerText     = document.getElementById('answerText');
-const answerQuestion = document.getElementById('answerQuestion');
+// ═══════════════════════════════════════════
+// STARS
+// ═══════════════════════════════════════════
+(function makeStars() {
+  const container = document.getElementById('stars');
+  for (let i = 0; i < 120; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    Object.assign(s.style, {
+      width: size+'px', height: size+'px',
+      left: Math.random()*100+'%', top: Math.random()*100+'%',
+      '--dur': (2+Math.random()*4)+'s',
+      '--del': (-Math.random()*4)+'s',
+      '--min': (0.05+Math.random()*0.2),
+      '--max': (0.5+Math.random()*0.5),
+    });
+    container.appendChild(s);
+  }
+})();
 
-questionInput.addEventListener('input', () => {
-  charCount.textContent = `${questionInput.value.length}/200`;
-  errorMsg.textContent = '';
+// ═══════════════════════════════════════════
+// CHAR COUNT
+// ═══════════════════════════════════════════
+document.getElementById('questionInput').addEventListener('input', function() {
+  document.getElementById('charCount').textContent = this.value.length + '/280';
+  document.getElementById('errorMsg').textContent = '';
 });
 
-questionForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const q = questionInput.value.trim();
+// ═══════════════════════════════════════════
+// ORACLE LOGIC
+// ═══════════════════════════════════════════
+let isAsking = false;
 
-  if (!q) {
-    errorMsg.textContent = 'The oracle cannot hear an empty question.';
-    questionInput.focus();
+async function askOracle() {
+  if (isAsking) return;
+
+  const input = document.getElementById('questionInput');
+  const question = input.value.trim();
+
+  if (!question) {
+    const errEl = document.getElementById('errorMsg');
+    errEl.textContent = '✦ Please ask your question before seeking an answer.';
+    input.focus();
     return;
   }
 
+  isAsking = true;
+  const btn = document.getElementById('askBtn');
+  btn.disabled = true;
+
+  // Pick random answer
   const answer = ANSWERS[Math.floor(Math.random() * ANSWERS.length)];
-  answerCard.classList.remove('visible');
-  consulting.classList.add('active');
-  askBtn.disabled = true;
 
+  // Show oracle section
+  const section = document.getElementById('oracleSection');
+  const card = document.getElementById('answerCard');
+  section.classList.add('visible');
+  card.classList.remove('revealed');
+
+  const crystalContainer = document.getElementById('crystalContainer');
+  crystalContainer.classList.add('thinking');
+
+  // Animate crystal 1.2–1.8s
+  const delay = 1200 + Math.random() * 600;
+  await sleep(delay);
+
+  crystalContainer.classList.remove('thinking');
+
+  // Reveal answer
+  document.getElementById('answerText').textContent = answer;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => { card.classList.add('revealed'); });
+  });
+
+  // Save to Supabase
+  await saveQuestion(question, answer);
+
+  btn.disabled = false;
+  isAsking = false;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function saveQuestion(question, answer) {
   try {
-    await supabase.from('questions').insert({ question: q, answer });
-  } catch (err) {
-    console.warn('Supabase save failed:', err);
+    const { error } = await supabaseClient
+      .from('book_of_answers')
+      .insert([{ question, answer, created_at: new Date().toISOString() }]);
+    if (error) console.warn('Supabase save error:', error.message);
+  } catch (e) {
+    console.warn('Supabase error:', e);
   }
+}
 
-  const delay = 1500 + Math.random() * 500;
-  await new Promise(r => setTimeout(r, delay));
-
-  consulting.classList.remove('active');
-  answerText.textContent = answer;
-  answerQuestion.textContent = `"${q}"`;
-  answerCard.classList.add('visible');
-  askBtn.disabled = false;
-});
-
-const madeWith     = document.getElementById('madeWith');
-const loginOverlay = document.getElementById('loginOverlay');
-let clickCount = 0, clickTimer = null;
-
-madeWith.addEventListener('click', () => {
-  clickCount++;
-  clearTimeout(clickTimer);
-  clickTimer = setTimeout(() => { clickCount = 0; }, 2000);
-  if (clickCount >= 3) {
-    clickCount = 0;
-    openLoginModal();
-  }
-});
-
-const modalClose  = document.getElementById('modalClose');
-const loginBtn    = document.getElementById('loginBtn');
-const loginError  = document.getElementById('loginError');
-const adminUser   = document.getElementById('adminUser');
-const adminPass   = document.getElementById('adminPass');
-
+// ═══════════════════════════════════════════
+// LOGIN MODAL
+// ═══════════════════════════════════════════
 function openLoginModal() {
-  adminUser.value = '';
-  adminPass.value = '';
-  loginError.textContent = '';
-  loginOverlay.classList.add('open');
-  setTimeout(() => adminUser.focus(), 300);
+  const modal = document.getElementById('loginModal');
+  modal.classList.add('open');
+  setTimeout(() => document.getElementById('passwordInput').focus(), 300);
 }
 
 function closeLoginModal() {
-  loginOverlay.classList.remove('open');
+  document.getElementById('loginModal').classList.remove('open');
+  document.getElementById('passwordInput').value = '';
+  document.getElementById('loginError').textContent = '';
 }
 
-modalClose.addEventListener('click', closeLoginModal);
-loginOverlay.addEventListener('click', (e) => {
-  if (e.target === loginOverlay) closeLoginModal();
-});
-
-loginBtn.addEventListener('click', handleLogin);
-adminPass.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') handleLogin();
-});
-
-function handleLogin() {
-  const u = adminUser.value.trim();
-  const p = adminPass.value;
-
-  if (u === ADMIN_USERNAME && p === ADMIN_PASSWORD) {
+function confirmLogin() {
+  const pw = document.getElementById('passwordInput').value;
+  if (pw === ADMIN_PASSWORD) {
     closeLoginModal();
-    showAdminPanel();
+    showAdmin();
   } else {
-    loginError.textContent = 'The words do not open the gate.';
-    adminPass.value = '';
-    adminPass.focus();
+    const err = document.getElementById('loginError');
+    err.textContent = '✦ The password does not resonate with the oracle.';
+    document.getElementById('passwordInput').value = '';
+    document.getElementById('passwordInput').focus();
   }
 }
 
-const mainApp      = document.getElementById('mainApp');
-const adminPanel   = document.getElementById('adminPanel');
-const questionsList = document.getElementById('questionsList');
-const logoutBtn    = document.getElementById('logoutBtn');
+// Click outside to close
+document.getElementById('loginModal').addEventListener('click', function(e) {
+  if (e.target === this) closeLoginModal();
+});
 
-async function showAdminPanel() {
-  mainApp.style.display = 'none';
-  adminPanel.classList.add('active');
-  questionsList.innerHTML = '<div class="loading-admin">Summoning records from the ether…</div>';
+// ═══════════════════════════════════════════
+// ADMIN PANEL
+// ═══════════════════════════════════════════
+let allQuestions = [];
+
+function showAdmin() {
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('adminPanel').classList.add('visible');
+  loadQuestions();
+}
+
+function showMain() {
+  document.getElementById('adminPanel').classList.remove('visible');
+  document.getElementById('mainApp').style.display = '';
+}
+
+async function loadQuestions() {
+  const tbody = document.getElementById('questionsBody');
+  tbody.innerHTML = '<tr class="loading-row"><td colspan="4">Consulting the stars…</td></tr>';
 
   try {
-    const { data, error } = await supabase
-      .from('questions')
+    const { data, error } = await supabaseClient
+      .from('book_of_answers')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(500);
 
     if (error) throw error;
+    allQuestions = data || [];
+  } catch(e) {
+    allQuestions = [];
+    showToast('Could not reach Supabase. Check your config.');
+  }
 
-    if (!data || data.length === 0) {
-      questionsList.innerHTML = `
+  updateStats();
+  renderTable(allQuestions);
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent = allQuestions.length;
+  const today = new Date().toDateString();
+  const todayCount = allQuestions.filter(q => new Date(q.created_at).toDateString() === today).length;
+  document.getElementById('statToday').textContent = todayCount;
+}
+
+function renderTable(questions) {
+  const tbody = document.getElementById('questionsBody');
+
+  if (!questions.length) {
+    tbody.innerHTML = `
+      <tr><td colspan="4">
         <div class="empty-state">
-          <span class="big">✨</span>
-          No questions have been asked yet.<br>The pages await their first seeker.
-        </div>`;
-      return;
-    }
+          <span class="es-icon">✦</span>
+          No questions have been asked yet.<br>The book awaits its first seeker.
+        </div>
+      </td></tr>`;
+    return;
+  }
 
-    questionsList.innerHTML = data.map(row => {
-      const d = new Date(row.created_at);
-      const time = d.toLocaleString('en-US', {
-        month: 'short', day: 'numeric', year: 'numeric',
-        hour: '2-digit', minute: '2-digit'
-      });
-      return `
-        <div class="q-item">
-          <div class="q-meta">📅 ${time} &nbsp;·&nbsp; #${row.id}</div>
-          <div class="q-text">${escapeHTML(row.question)}</div>
-          <div class="q-answer">✦ ${escapeHTML(row.answer)}</div>
-        </div>`;
-    }).join('');
+  tbody.innerHTML = questions.map((q, i) => `
+    <tr>
+      <td class="q-num">${i+1}</td>
+      <td class="q-text">${escHtml(q.question)}</td>
+      <td class="q-answer">${escHtml(q.answer || '—')}</td>
+      <td class="q-time">${formatTime(q.created_at)}</td>
+    </tr>
+  `).join('');
+}
 
-  } catch (err) {
-    questionsList.innerHTML = `
-      <div class="empty-state">
-        <span class="big">⚠️</span>
-        Failed to load records.<br><small>${escapeHTML(String(err.message))}</small>
-      </div>`;
+function filterQuestions() {
+  const q = document.getElementById('adminSearch').value.toLowerCase();
+  const filtered = allQuestions.filter(r =>
+    r.question.toLowerCase().includes(q) ||
+    (r.answer||'').toLowerCase().includes(q)
+  );
+  renderTable(filtered);
+}
+
+async function clearAll() {
+  if (!confirm('Erase all questions from the cosmic record? This cannot be undone.')) return;
+  try {
+    const { error } = await supabaseClient
+      .from('book_of_answers')
+      .delete()
+      .neq('id', 0);
+    if (error) throw error;
+    allQuestions = [];
+    updateStats();
+    renderTable([]);
+    showToast('All records have been erased.');
+  } catch(e) {
+    showToast('Could not clear records.');
   }
 }
 
-logoutBtn.addEventListener('click', () => {
-  adminPanel.classList.remove('active');
-  mainApp.style.display = '';
-});
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
 
-function escapeHTML(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-            .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+function formatTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = (now - d) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 </script>
 </body>
